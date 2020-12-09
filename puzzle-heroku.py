@@ -81,7 +81,7 @@ def output():
 	return puzzle.astype('uint8')
 
 st.write("""Your Puzzle """)
-st.image(output(), clamp=True)
+st.image(output(), clamp=True, use_column_width=True)
 
 
 
