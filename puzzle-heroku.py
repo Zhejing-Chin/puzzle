@@ -59,9 +59,8 @@ def output():
 		input_img = Image.open(io.BytesIO(filename))
 		input_img = input_img.resize((img_w, img_h), Image.LANCZOS)
 		input_img = tf.keras.preprocessing.image.img_to_array(input_img)
-		# input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
 
-		folder = '/Users/zhejing/Puzzle/CROP/*.png'
+		folder = 'CROP/*.png'
 		num = 0
 		for data_img in glob.glob(folder):
 			filename = os.path.basename(data_img)
