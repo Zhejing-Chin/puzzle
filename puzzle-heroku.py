@@ -6,6 +6,12 @@ import matplotlib.pyplot as plt
 from tkinter import Tk 
 from tkinter.filedialog import askopenfilename
 import streamlit as st
+import io
+from PIL import Image
+import tensorflow as tf
+
+
+st.set_option('deprecation.showfileUploaderEncoding', False)
 
 st.write("""
 # Auto Puzzle App
@@ -39,50 +45,44 @@ def compare_images(imageA, imageB, filename):
 		return (re.findall('\d+', filename))[0]
 	else:
 		return 0
-	
+
 puzzle = np.ones((225,225,3))
 
-img_num = input("Start? (y/n) ")
+uploaded_file = st.file_uploader("Upload a file", type=("png", "jpg"))
 
-while str(img_num) != 'n' :
+@st.cache(suppress_st_warning=True)
+def output():
+	if uploaded_file == None:
+		st.warning('No file selected.')
+	else:
+		filename = uploaded_file.read()
+		input_img = Image.open(io.BytesIO(filename))
+		input_img = input_img.resize((img_w, img_h), Image.LANCZOS)
+		input_img = tf.keras.preprocessing.image.img_to_array(input_img)
+		# input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
 
-	try:
-		Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
-		filename = askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")]) # show an "Open" dialog box and return the path to the selected file
-		print(filename)
-		input_img = cv2.imread(filename)
-		input_img = cv2.resize(input_img, (img_w, img_h), interpolation=cv2.INTER_AREA)
+		folder = '/Users/zhejing/Puzzle/CROP/*.png'
+		num = 0
+		for data_img in glob.glob(folder):
+			filename = os.path.basename(data_img)
+			data_img = cv2.imread(data_img)
+			data_img = cv2.cvtColor(data_img, cv2.COLOR_BGR2RGB)
+			num = int(compare_images(input_img, data_img, filename))
+			y = ((num-1) // 3) * img_h
+			x = ((num-1) % 3) * img_w
 
-	except :
-		print ("\nNo file selected.\n")
-		img_num = input("Continue? (y/n) ")
-		continue
-		
-	input_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2RGB)
+			if num:
+				puzzle[y:y+img_h, x:x+img_w] = input_img
+				break
 
-	folder = '/Users/zhejing/Puzzle/CROP/*.png'
-	num = 0
-	for data_img in glob.glob(folder):
-		filename = os.path.basename(data_img)
-		data_img = cv2.imread(data_img)
-		data_img = cv2.cvtColor(data_img, cv2.COLOR_BGR2RGB)
-		num = int(compare_images(input_img, data_img, filename))
-		y = ((num-1) // 3) * img_h
-		x = ((num-1) % 3) * img_w
-		print(x, y)
+		if not num:
+			st.write("\nNo such part in your puzzle!")
 
-		if num:
-			puzzle[y:y+img_h, x:x+img_w] = input_img
-			break
+	return puzzle.astype('uint8')
 
-	if not num:
-		print("\nNo such part in your puzzle!")
+st.write("""Your Puzzle """)
+st.image(output(), clamp=True)
 
-	img_num = input("Continue? (y/n) ")
-
-plt.axis('off')
-plt.imshow(puzzle.astype('uint8'))
-plt.show()
 
 
 
