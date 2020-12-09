@@ -1,10 +1,6 @@
 import numpy as np
 import cv2
 import glob, os
-import re
-import matplotlib.pyplot as plt
-from tkinter import Tk 
-from tkinter.filedialog import askopenfilename
 import streamlit as st
 import io
 from PIL import Image
